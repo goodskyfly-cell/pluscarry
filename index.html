@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>國小數學練習題 - A4 完美對齊版</title>
+    <title>國小數學練習題 - A4 完美點選版</title>
     <style>
         :root {
             --page-width: 210mm;
@@ -15,75 +15,95 @@
         }
 
         @page { size: A4; margin: 0; }
+        
         body {
             margin: 0; padding: 0;
-            background-color: #f8f9fa;
+            background-color: #f0f2f5;
             font-family: "Microsoft JhengHei", sans-serif;
             display: flex; flex-direction: column; align-items: center;
         }
 
+        /* 修正點選問題：確保控制面板在最上層且不被遮擋 */
         .controls {
-            background: #2c3e50; color: white; padding: 12px;
-            width: 100%; text-align: center; position: sticky; top: 0; z-index: 100;
+            background: #2c3e50; 
+            color: white; 
+            padding: 15px;
+            width: 100%; 
+            text-align: center; 
+            position: relative; /* 改為 relative 確保初始層級 */
+            z-index: 9999;     /* 極高層級確保可點擊 */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
-        .btn {
-            padding: 6px 12px; margin: 2px; font-size: 14px;
-            cursor: pointer; border: none; border-radius: 4px;
-            background: #7f8c8d; color: white;
-        }
-        .btn.active { background: #27ae60; font-weight: bold; }
-        .btn-refresh { background: #e67e22; }
 
-        /* A4 紙張容器 */
+        .control-group { 
+            margin: 8px 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            flex-wrap: wrap; 
+        }
+
+        .group-label { font-weight: bold; margin-right: 10px; color: #ecf0f1; }
+
+        .btn {
+            padding: 6px 14px; margin: 3px; font-size: 14px;
+            cursor: pointer; border: none; border-radius: 4px;
+            background: #95a5a6; color: white; 
+            transition: background 0.2s;
+            display: inline-block;
+        }
+
+        .btn:hover { background: #7f8c8d; }
+        .btn.active { background: #27ae60 !important; font-weight: bold; }
+        .btn-sub { background: #34495e; font-size: 13px; }
+        .btn-sub.active { background: #2980b9 !important; }
+        .btn-refresh { background: #e67e22; margin-left: 15px; font-weight: bold; }
+
+        /* A4 紙張 */
         .a4-page {
-            width: var(--page-width);
+            width: var(--page-width); 
             height: var(--page-height);
-            background: white;
-            padding: 8mm 12mm; /* 稍微縮小邊距 */
-            box-sizing: border-box;
-            display: flex;
+            background: white; 
+            padding: 10mm 15mm;
+            box-sizing: border-box; 
+            display: flex; 
             flex-direction: column;
-            overflow: hidden; /* 確保絕不產生第二頁 */
-            box-shadow: 0 0 20px rgba(0,0,0,0.15);
-            margin: 10px 0;
+            overflow: hidden; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.2); 
+            margin: 20px 0;
+            position: relative;
+            z-index: 1; /* 確保低於控制面板 */
         }
 
         .header h1 { text-align: center; margin: 0 0 5px 0; font-size: 22pt; }
         .info-bar {
             display: flex; justify-content: space-around;
-            font-size: 13pt; margin-bottom: 10px;
-            border-bottom: 2px solid #333; padding-bottom: 5px;
+            font-size: 13pt; margin-bottom: 15px;
+            border-bottom: 2px solid #000; padding-bottom: 5px;
         }
 
-        /* 題目網格佈局 */
         .problem-grid {
             display: grid;
             grid-template-columns: repeat(var(--grid-cols), 1fr);
             grid-template-rows: repeat(var(--grid-rows), 1fr);
-            flex-grow: 1; /* 自動填滿剩餘高度 */
-            gap: var(--grid-gap);
+            flex-grow: 1; 
+            gap: var(--grid-gap); 
             align-items: center;
         }
 
-        .math-box { 
-            display: flex; justify-content: center; align-items: center; 
-            height: 100%; width: 100%;
-        }
+        .math-box { display: flex; justify-content: center; align-items: center; height: 100%; }
 
-        /* 直式核心結構 */
         .vertical-math {
             display: grid;
             grid-template-columns: calc(var(--carry-size) * 0.7) var(--carry-size) var(--carry-size) var(--carry-size);
             grid-template-rows: var(--carry-size) auto auto 4px auto;
             font-size: var(--math-font-size);
-            align-items: center; justify-items: center;
-            line-height: 1.1;
+            align-items: center; justify-items: center; line-height: 1.1;
         }
 
         .carry-box {
             width: var(--carry-size); height: var(--carry-size);
             border: 1.5px dashed #95a5a6; visibility: hidden;
-            box-sizing: border-box;
         }
         .carry-box.visible { visibility: visible; }
         
@@ -96,7 +116,7 @@
         .line { grid-column: 1 / span 4; grid-row: 4; border-bottom: 2px solid black; width: 100%; }
 
         @media print {
-            .controls { display: none; }
+            .controls { display: none !important; }
             body { background: none; }
             .a4-page { margin: 0; box-shadow: none; }
         }
@@ -106,19 +126,30 @@
 
 <div class="controls">
     <div class="control-group">
-        <button class="btn active" id="mode-2-1" onclick="setMode('2-1')">二位+一位</button>
-        <button class="btn" id="mode-2-2-10" onclick="setMode('2-2-10')">二加二(進十位)</button>
-        <button class="btn" id="mode-2-2-100" onclick="setMode('2-2-100')">二加二(進百位)</button>
-        |
+        <span class="group-label">題目模式：</span>
+        <button class="btn active" id="mode-2-1" onclick="setMode('2-1')">二位 + 一位</button>
+        <button class="btn" id="mode-2-2-10" onclick="setMode('2-2-10')">二加二 (進十位)</button>
+        <button class="btn" id="mode-2-2-100" onclick="setMode('2-2-100')">二加二 (進百位)</button>
+    </div>
+    
+    <div class="control-group" id="sub-controls-2-1" style="display: flex;">
+        <span class="group-label">二加一設定：</span>
+        <button class="btn btn-sub active" id="sub-carry" onclick="setSubMode('carry')">必定進位</button>
+        <button class="btn btn-sub" id="sub-no-carry" onclick="setSubMode('no-carry')">不進位</button>
+        <button class="btn btn-sub" id="sub-mixed" onclick="setSubMode('mixed')">隨機混合</button>
+    </div>
+
+    <div class="control-group">
+        <span class="group-label">題數排版：</span>
         <button class="btn" id="size-3-3" onclick="setGrid(3,3)">3x3 (9題)</button>
         <button class="btn" id="size-4-4" onclick="setGrid(4,4)">4x4 (16題)</button>
         <button class="btn active" id="size-4-5" onclick="setGrid(4,5)">4x5 (20題)</button>
-        <button class="btn btn-refresh" onclick="generate()">↺ 重新換題</button>
+        <button class="btn btn-refresh" onclick="generate()">↺ 重新出題</button>
     </div>
 </div>
 
 <div class="a4-page">
-    <div class="header"><h1 id="title">二位數加一位數進位練習</h1></div>
+    <div class="header"><h1 id="title">二位數加一位數練習</h1></div>
     <div class="info-bar">
         <span>班級：__________</span> <span>姓名：__________</span> <span>座號：____</span>
     </div>
@@ -126,36 +157,59 @@
 </div>
 
 <script>
+    // 初始化全域變數
     let currentMode = '2-1';
-    let gCols = 4, gRows = 5;
+    let subMode = 'carry';
+    let gCols = 4;
+    let gRows = 5;
 
+    // 核心修正：將所有邏輯封裝在對應函數中
     function setMode(mode) {
         currentMode = mode;
+        // 更新按鈕狀態
         document.querySelectorAll('.control-group:first-child .btn').forEach(b => b.classList.remove('active'));
         document.getElementById(`mode-${mode}`).classList.add('active');
-        const titles = { '2-1': '二位數加一位數進位練習', '2-2-10': '二加二 (進十位)', '2-2-100': '二加二 (進百位)' };
+        
+        // 切換子選單顯示
+        const subCtrl = document.getElementById('sub-controls-2-1');
+        subCtrl.style.display = (mode === '2-1') ? 'flex' : 'none';
+        
+        const titles = { 
+            '2-1': '二位數加一位數練習', 
+            '2-2-10': '二加二 (進十位) 練習', 
+            '2-2-100': '二加二 (進百位) 練習' 
+        };
         document.getElementById('title').innerText = titles[mode];
         generate();
     }
 
+    function setSubMode(sMode) {
+        subMode = sMode;
+        document.querySelectorAll('.btn-sub').forEach(b => b.classList.remove('active'));
+        document.getElementById(`sub-${sMode}`).classList.add('active');
+        generate();
+    }
+
     function setGrid(cols, rows) {
-        gCols = cols; gRows = rows;
-        document.querySelectorAll('.btn').forEach(b => { if(b.id.startsWith('size')) b.classList.remove('active'); });
+        gCols = cols; 
+        gRows = rows;
+        document.querySelectorAll('.control-group:last-child .btn').forEach(b => {
+            if(b.id.startsWith('size')) b.classList.remove('active');
+        });
         document.getElementById(`size-${cols}-${rows}`).classList.add('active');
         
         const root = document.documentElement;
-        // 核心修正：根據題數大幅度調整間距與字體大小，確保 A4 空間足夠
         if(cols === 3) {
-            root.style.setProperty('--math-font-size', '44pt');
-            root.style.setProperty('--carry-size', '40px');
-            root.style.setProperty('--grid-gap', '20px');
+            root.style.setProperty('--math-font-size', '42pt');
+            root.style.setProperty('--carry-size', '38px');
+            root.style.setProperty('--grid-gap', '15px');
         } else if(cols === 4 && rows === 4) {
             root.style.setProperty('--math-font-size', '32pt');
             root.style.setProperty('--carry-size', '30px');
             root.style.setProperty('--grid-gap', '10px');
-        } else { // 4x5
-            root.style.setProperty('--math-font-size', '28pt');
-            root.style.setProperty('--carry-size', '26px');
+        } else {
+            root.style.setProperty('--math-font-size', '27pt');
+            root.style.setProperty('--carry-size', '24px');
             root.style.setProperty('--grid-gap', '5px');
         }
         root.style.setProperty('--grid-cols', cols);
@@ -165,6 +219,7 @@
 
     function generate() {
         const grid = document.getElementById('mainGrid');
+        if (!grid) return;
         grid.innerHTML = '';
         const total = gCols * gRows;
 
@@ -174,8 +229,9 @@
             if (currentMode === '2-1') {
                 n1_t = Math.floor(Math.random() * 8) + 1;
                 n1_o = Math.floor(Math.random() * 9) + 1;
-                do { n2_o = Math.floor(Math.random() * 9) + 1; } while (n1_o + n2_o < 10);
-                isC10 = true;
+                let targetCarry = (subMode === 'carry') ? true : (subMode === 'no-carry' ? false : Math.random() < 0.5);
+                do { n2_o = Math.floor(Math.random() * 9) + 1; } while ((n1_o + n2_o >= 10) !== targetCarry);
+                isC10 = targetCarry;
             } else if (currentMode === '2-2-10') {
                 do {
                     n1_t = Math.floor(Math.random() * 4) + 1; n1_o = Math.floor(Math.random() * 9) + 1;
@@ -208,7 +264,11 @@
             grid.appendChild(item);
         }
     }
-    window.onload = () => setGrid(4, 5); // 預設 4x5
+
+    // 確保頁面加載完成後才執行初始生成
+    window.onload = function() {
+        setGrid(4, 5); 
+    };
 </script>
 </body>
 </html>
